@@ -816,7 +816,7 @@ search[1] in ABP : init =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bi
 --- getIndex(SWP) >= getIndex(ABP) and getList(SWP) = getList(ABP)
 --- getBit1(ABP) = getBit2(ABP) 
 fmod SIM_SWP2ABP_01 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -833,7 +833,7 @@ red in SIM_SWP2ABP_01 : SWP2ABP-sim(swp(fqueue, aqueue, seq, s(index1), eASeq, w
 
 --- getBit1(ABP) != getBit2(ABP) 
 fmod SIM_SWP2ABP_02 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -851,7 +851,7 @@ red in SIM_SWP2ABP_02 : SWP2ABP-sim(swp(fqueue, aqueue, seq, index1, eASeq, wc, 
 --- r1 = false
 --- getIndex(SWP) < getIndex(ABP)
 fmod SIM_SWP2ABP_03 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -864,7 +864,7 @@ red in SIM_SWP2ABP_03 : SWP2ABP-sim(swp(fqueue, aqueue, seq, index1, eASeq, wc, 
 
 --- getList(SWP) != getList(ABP)
 fmod SIM_SWP2ABP_04 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -914,7 +914,7 @@ search in BCP : init =>* {(index: I) (list: L) OCs} .
 --- rec2
 --- seq(FR) = S
 mod SWP_REC2_01 is
-  inc SIM .
+  pr SIM .
   pr SWP .
 
   ops seq1 seq2 : -> Nat+ .
@@ -924,7 +924,7 @@ endm
 srew in SWP_REC2_01 : {(queue1: (frame(seq1, index) fqueue)) (queue2: aqueue) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: seq2)} using rec2 .
 red in SWP_REC2_01 : r1(swp((frame(seq1, index) fqueue), aqueue, seq, index, eASeq, wc, list, seq2), abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list)) .
 mod SWP_REC2_ABP_01 is
-  inc SIM .
+  pr SIM .
   pr ABP .
 
   var I : Nat+ .
@@ -944,7 +944,7 @@ search in SWP_REC2_ABP_01 : init =>* {(queue1: (PC PQ)) (queue2: BQ) (bit1: B1) 
 --- composition
 red in SWP_REC2_01 : r1(swp((frame(seq1, index) fqueue), aqueue, seq, index, eASeq, wc, list, seq2), abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list)) and r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
 mod SWP_REC2_BCP_01 is
-  inc SIM .
+  pr SIM .
   pr BCP .
 
   var I : Nat+ .
@@ -960,7 +960,7 @@ search in SWP_REC2_BCP_01 : init =>* {(index: I) (list: L) OCs} .
 
 --- seq(FR) != S
 mod SWP_REC2_02 is
-  inc SIM .
+  pr SIM .
   pr SWP .
 
   ops seq1 seq2 : -> Nat+ .
@@ -970,7 +970,7 @@ endm
 srew in SWP_REC2_02 : {(queue1: (frame(seq1, index) fqueue)) (queue2: aqueue) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: seq2)} using rec2 .
 red in SWP_REC2_02 : r1(swp((frame(seq1, index) fqueue), aqueue, seq, index, eASeq, wc, list, seq2), abp(pqueue, bqueue, bool, index, bool, list)) .
 mod SWP_REC2_ABP_02 is
-  inc SIM .
+  pr SIM .
   pr ABP .
 
   var I : Nat+ .
@@ -989,7 +989,7 @@ search in SWP_REC2_ABP_02 : init =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (inde
 --- composition
 red in SWP_REC2_ABP_02 : r1(swp((frame(seq1, index) fqueue), aqueue, seq, index, eASeq, wc, list, seq2), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
 mod SWP_REC2_BCP_02 is
-  inc SIM .
+  pr SIM .
   pr BCP .
 
   var I : Nat+ .
@@ -1054,7 +1054,7 @@ search[1] in SCP : init =>* {(bit1: B1) (bit2: B2) (index: I) (list: L) OCs} suc
 --- r2 = ture, SCP-inv = true
 --- getBit1(ABP) = getBit2(ABP) 
 fmod SIM_ABP2SCP_01 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1074,7 +1074,7 @@ red in SIM_ABP2SCP_01 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, s(index1), bool2,
 
 --- getBit1(ABP) != getBit2(ABP) 
 fmod SIM_ABP2SCP_02 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1093,7 +1093,7 @@ red in SIM_ABP2SCP_02 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, li
 
 --- r2 = true, SCP-inv = false
 fmod SIM_ABP2SCP_03 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1110,7 +1110,7 @@ endfm
 red in SIM_ABP2SCP_03 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
 
 fmod SIM_ABP2SCP_04 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1128,7 +1128,7 @@ red in SIM_ABP2SCP_04 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, li
 
 --- r2 = false
 fmod SIM_ABP2SCP_05 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1142,7 +1142,7 @@ endfm
 red in SIM_ABP2SCP_05 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
 
 fmod SIM_ABP2SCP_06 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1156,7 +1156,7 @@ endfm
 red in SIM_ABP2SCP_06 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
 
 fmod SIM_ABP2SCP_07 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1170,7 +1170,7 @@ endfm
 red in SIM_ABP2SCP_07 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
 
 fmod SIM_ABP2SCP_08 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1302,7 +1302,7 @@ search[1] in BCP2 : init =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} su
 --- r4 = true, BCP2-inv = true
 --- getBit1(SCP) = getBit2(SCP) 
 fmod SIM_SCP2BCP2_01 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1322,7 +1322,7 @@ red in SIM_SCP2BCP2_01 : SCP2BCP2-sim(scp(bool1, s(index1), bool2, list1), bcp2(
 
 --- getBit1(SCP) != getBit2(SCP) 
 fmod SIM_SCP2BCP2_02 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1341,7 +1341,7 @@ red in SIM_SCP2BCP2_02 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(boo
 
 --- r4 = true, BCP2-inv = false
 fmod SIM_SCP2BCP2_03 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1358,7 +1358,7 @@ endfm
 red in SIM_SCP2BCP2_03 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
 
 fmod SIM_SCP2BCP2_04 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1376,7 +1376,7 @@ red in SIM_SCP2BCP2_04 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(boo
 
 --- r4 = false
 fmod SIM_SCP2BCP2_05 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1390,7 +1390,7 @@ endfm
 red in SIM_SCP2BCP2_05 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
 
 fmod SIM_SCP2BCP2_06 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1404,7 +1404,7 @@ endfm
 red in SIM_SCP2BCP2_06 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
 
 fmod SIM_SCP2BCP2_07 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1418,7 +1418,7 @@ endfm
 red in SIM_SCP2BCP2_07 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
 
 fmod SIM_SCP2BCP2_08 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 bool3 bool4 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1530,7 +1530,7 @@ search[1] in BCP : init =>* {(index: I) (list: L) OCs} such that not BCP-inv(bcp
 --- r5 = true, BCP-inv = true
 --- getBit1(BCP2) = getBit2(BCP2) 
 fmod SIM_BCP22BCP_01 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1547,7 +1547,7 @@ red in SIM_BCP22BCP_01 : BCP22BCP-sim(bcp2(bool1, s(index1), bool2, list1), bcp(
 
 --- getBit1(BCP2) != getBit2(BCP2) 
 fmod SIM_BCP22BCP_02 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1564,7 +1564,7 @@ red in SIM_BCP22BCP_02 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(s(i
 --- r5 = true, BCP-inv = false
 --- getBit1(BCP2) = getBit2(BCP2) 
 fmod SIM_BCP22BCP_03 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1579,7 +1579,7 @@ red in SIM_BCP22BCP_03 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(ind
 
 --- getBit1(BCP2) != getBit2(BCP2) 
 fmod SIM_BCP22BCP_04 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1594,7 +1594,7 @@ red in SIM_BCP22BCP_04 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(ind
 
 --- r5 = false
 fmod SIM_BCP22BCP_05 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1607,7 +1607,7 @@ endfm
 red in SIM_BCP22BCP_05 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
 
 fmod SIM_BCP22BCP_06 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1620,7 +1620,7 @@ endfm
 red in SIM_BCP22BCP_06 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
 
 fmod SIM_BCP22BCP_07 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
@@ -1633,7 +1633,7 @@ endfm
 red in SIM_BCP22BCP_07 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
 
 fmod SIM_BCP22BCP_08 is
-  inc SIM .
+  pr SIM .
 
   ops bool1 bool2 : -> Bool+ .
   ops index1 index2 : -> Nat+ .
