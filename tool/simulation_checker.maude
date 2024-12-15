@@ -179,15 +179,3 @@ fmod SIMULATION-CHECKER-IO is
   eq resultToString(notExistSimulationRelation) = "NotExistSimulationRelation" .
   eq resultToString(notFoundStateWithSimulationRelation) = "NotFoundStateWithSimulationRelation" .
 endfm
-
-red in SIMULATION-CHECKER-IO : 
-  simulate<< "SIM"  | "r5" > 
-           < "BCP2" | "{(bit1: bool) (index: index) (bit2: (not bool)) (list: list)}" > 
-           < "BCP"  | "{(index: s(index)) (list: list)}" >
-           "send1" > .
-
-red in SIMULATION-CHECKER-IO : 
-  simulate<< "SIM"  | "r5" > 
-           < "BCP2" | "{(bit1: bool) (index: index) (bit2: bool) (list: list)}" > 
-           < "BCP"  | "{(index: index) (list: list)}" >
-           "send2" > .
