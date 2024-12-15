@@ -1,0 +1,804 @@
+load ./communication_protocol.maude
+
+-------------------------------------------------------------------------------------------
+--- Verification that the ABP simulates the SWP and satisfies the invariant of the SWP　---
+-------------------------------------------------------------------------------------------
+
+--- ABP-inv
+search[1] in ABP : init =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that not ABP-inv(abp(PQ, BQ, B1, I, B2, L)) .
+
+--- r1 → (ABP-inv → SWP-inv)
+--- getIndex(SWP) >= getIndex(ABP) and getList(SWP) = getList(ABP)
+--- getBit1(ABP) = getBit2(ABP) 
+fmod SIM_SWP2ABP_01 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (s(index1) >= s(index2)) = true .
+  eq list1 = mk(index1) .
+  eq list2 = mk(index2) .
+  eq (mk(index1) = mk(index2)) = true .
+endfm
+red in SIM_SWP2ABP_01 : SWP2ABP-sim(swp(fqueue, aqueue, seq, 0, eASeq, wc, nil, eFSeq), abp(pqueue, bqueue, bool1, 0, bool2, nil)) .
+red in SIM_SWP2ABP_01 : SWP2ABP-sim(swp(fqueue, aqueue, seq, s(index1), eASeq, wc, list1, eFSeq), abp(pqueue, bqueue, bool1, s(index2), bool2, list2)) .
+
+--- getBit1(ABP) != getBit2(ABP) 
+fmod SIM_SWP2ABP_02 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (index1 >= index2) = true .
+  eq list1 = mk(index1) .
+  eq list2 = mk(index2) .
+  eq (mk(index1) = mk(index2)) = true .
+endfm
+
+red in SIM_SWP2ABP_02 : SWP2ABP-sim(swp(fqueue, aqueue, seq, index1, eASeq, wc, list1, eFSeq), abp(pqueue, bqueue, bool1, index2, bool2, list2)) .
+
+--- r1 = false
+--- getIndex(SWP) < getIndex(ABP)
+fmod SIM_SWP2ABP_03 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (index1 >= index2) = false .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_SWP2ABP_03 : SWP2ABP-sim(swp(fqueue, aqueue, seq, index1, eASeq, wc, list1, eFSeq), abp(pqueue, bqueue, bool1, index2, bool2, list2)) .
+
+--- getList(SWP) != getList(ABP)
+fmod SIM_SWP2ABP_04 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (index1 >= index2) = true .
+  eq (list1 = list2) = false .
+endfm
+red in SIM_SWP2ABP_04 : SWP2ABP-sim(swp(fqueue, aqueue, seq, index1, eASeq, wc, list1, eFSeq), abp(pqueue, bqueue, bool1, index2, bool2, list2)) .
+
+--- r1
+--- Condition(i)
+red in SIM : r1(swp(empty, empty, 0, 0, 0, 0, nil, 0), abp(empty, empty, false, 0, false, nil)) .
+red in SIM : r1(swp(empty, empty, 0, 0, 0, 0, nil, 0), abp(empty, empty, false, 0, false, nil)) and r2(abp(nil, nil, false, 0, false, nil), scp(empty, empty, false, 0, false, nil)) and r4(scp(empty, empty, false, 0, false, nil), bcp2(false, 0, false, nil)) and r5(bcp2(false, 0, false, nil), bcp(0, nil)) .
+
+--- Condition(ii)
+--- send1 
+srew in SWP : {(queue1: fqueue) (queue2: aqueue) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: smallerWindowSize) (list: list) (expectedFrameSeq: eFSeq)} using send1 .
+red in SIM : r1(swp(fqueue, aqueue, seq, index, eASeq, smallerWindowSize, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) .
+search[1] in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp((fqueue frame(seq, index)), aqueue, ((seq + 1) rem 3), s(index), eASeq, s(smallerWindowSize), list, eFSeq), abp(PQ, BQ, B1, I, B2, L)) .
+--- composition
+red in SIM : r1(swp(fqueue, aqueue, seq, index, eASeq, smallerWindowSize, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp((fqueue frame(seq, index)), aqueue, ((seq + 1) rem 3), s(index), eASeq, s(smallerWindowSize), list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- rec1
+srew in SWP : {(queue1: fqueue) (queue2: (ack(j) aqueue)) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: eFSeq)} using rec1 .
+red in SIM : r1(swp(fqueue, (ack(j) aqueue), seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) .
+search[1] in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, expectedAckSeq(eASeq, j, seq), windowCount(wc, eASeq, j, seq), list, eFSeq), abp(PQ, BQ, B1, I, B2, L)) .
+--- composition
+red in SIM : r1(swp(fqueue, (ack(j) aqueue), seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, expectedAckSeq(eASeq, j, seq), windowCount(wc, eASeq, j, seq), list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- send2
+srew in SWP : {(queue1: fqueue) (queue2: aqueue) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: eFSeq)} using send2 .
+red in SIM : r1(swp(fqueue, aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) .
+search[1] in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp(fqueue, (aqueue ack((eFSeq + 2) rem 3)), seq, index, eASeq, wc, list, eFSeq), abp(PQ, BQ, B1, I, B2, L)) .
+--- composition
+red in SIM : r1(swp(fqueue, aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp(fqueue, (aqueue ack((eFSeq + 2) rem 3)), seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- rec2
+--- seq(FR) = S
+mod SWP_REC2_01 is
+  pr SIM .
+  pr SWP .
+
+  ops seq1 seq2 : -> Nat+ .
+
+  eq (seq1 =Nat+ seq2) = true .
+endm
+srew in SWP_REC2_01 : {(queue1: (frame(seq1, index) fqueue)) (queue2: aqueue) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: seq2)} using rec2 .
+red in SWP_REC2_01 : r1(swp((frame(seq1, index) fqueue), aqueue, seq, index, eASeq, wc, list, seq2), abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list)) .
+mod SWP_REC2_ABP_01 is
+  pr SIM .
+  pr ABP .
+
+  var I : Nat+ .
+  var L : List{Nat+} .
+  vars B1 B2 : Bool+ .
+  var PQ : Queue{PCell} .
+  var BQ : Queue{BCell} .
+  var PC : PCell .
+  var OCs : Soup{ABPOCom} .
+
+  ops seq1 seq2 : -> Nat+ .
+
+  eq (seq1 =Nat+ seq2) = true .
+endm
+search[1] in SWP_REC2_ABP_01 : {(queue1: (pcell(bool, index) pqueue)) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, eASeq, wc, (index list), (seq2 + 1) rem 3), abp(PQ, BQ, B1, I, B2, L)) .
+--- composition
+red in SWP_REC2_01 : r1(swp((frame(seq1, index) fqueue), aqueue, seq, index, eASeq, wc, list, seq2), abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list)) and r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+mod SWP_REC2_BCP_01 is
+  pr SIM .
+  pr BCP .
+
+  var I : Nat+ .
+  var L : List{Nat+} .
+  var OCs : Soup{BCPOCom} .
+
+  ops seq1 seq2 : -> Nat+ .
+
+  eq (seq1 =Nat+ seq2) = true .
+endm
+search[1] in SWP_REC2_BCP_01 : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, eASeq, wc, (index list), (seq2 + 1) rem 3), abp(pqueue, bqueue, bool, index, (not bool), (index list))) and r2(abp(pqueue, bqueue, bool, index, (not bool), (index list)), scp(pcell, bcell, bool, index, (not bool), (index list))) and r4(scp(pcell, bcell, bool, index, (not bool), (index list)), bcp2(bool, index, (not bool), (index list))) and r5(bcp2(bool, index, (not bool), (index list)), bcp(I, L)) .
+
+--- seq(FR) != S
+mod SWP_REC2_02 is
+  pr SIM .
+  pr SWP .
+
+  ops seq1 seq2 : -> Nat+ .
+
+  eq (seq1 =Nat+ seq2) = false .
+endm
+srew in SWP_REC2_02 : {(queue1: (frame(seq1, index) fqueue)) (queue2: aqueue) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: seq2)} using rec2 .
+red in SWP_REC2_02 : r1(swp((frame(seq1, index) fqueue), aqueue, seq, index, eASeq, wc, list, seq2), abp(pqueue, bqueue, bool, index, bool, list)) .
+mod SWP_REC2_ABP_02 is
+  pr SIM .
+  pr ABP .
+
+  var I : Nat+ .
+  var L : List{Nat+} .
+  vars B1 B2 : Bool+ .
+  var PQ : Queue{PCell} .
+  var BQ : Queue{BCell} .
+  var OCs : Soup{ABPOCom} .
+
+  ops seq1 seq2 : -> Nat+ .
+
+  eq (seq1 =Nat+ seq2) = false .
+endm
+search[1] in SWP_REC2_ABP_02 : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, eASeq, wc, list, seq2), abp(PQ, BQ, B1, I, B2, L)) .
+--- composition
+red in SWP_REC2_ABP_02 : r1(swp((frame(seq1, index) fqueue), aqueue, seq, index, eASeq, wc, list, seq2), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+mod SWP_REC2_BCP_02 is
+  pr SIM .
+  pr BCP .
+
+  var I : Nat+ .
+  var L : List{Nat+} .
+  var OCs : Soup{BCPOCom} .
+
+  ops seq1 seq2 : -> Nat+ .
+
+  eq (seq1 =Nat+ seq2) = false .
+endm
+search[1] in SWP_REC2_BCP_02 : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, eASeq, wc, list, seq2), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- drop1
+srew in SWP : {(queue1: (frame(j, index) fqueue)) (queue2: aqueue) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: eFSeq)} using drop1 .
+red in SIM : r1(swp((frame(j, index) fqueue), aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) .
+search[1] in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, eASeq, wc, list, eFSeq), abp(PQ, BQ, B1, index, B2, L)) .
+--- composition
+red in SIM : r1(swp((frame(j, index) fqueue), aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- dup1
+srew in SWP : {(queue1: (frame(j, index) fqueue)) (queue2: aqueue) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: eFSeq)} using dup1 .
+red in SIM : r1(swp((frame(j, index) fqueue), aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) .
+search[1] in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp((frame(j, index) frame(j, index) fqueue), aqueue, seq, index, eASeq, wc, list, eFSeq), abp(PQ, BQ, B1, index, B2, L)) .
+--- composition
+red in SIM : r1(swp((frame(j, index) fqueue), aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp((frame(j, index) frame(j, index) fqueue), aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- drop2
+srew in SWP : {(queue1: fqueue) (queue2: (ack(j) aqueue)) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: eFSeq)} using drop2 .
+red in SIM : r1(swp(fqueue, (ack(j) aqueue), seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) .
+search[1] in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, eASeq, wc, list, eFSeq), abp(PQ, BQ, B1, index, B2, L)) .
+--- composition
+red in SIM : r1(swp(fqueue, (ack(j) aqueue), seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp(fqueue, aqueue, seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- dup2
+srew in SWP : {(queue1: fqueue) (queue2: (ack(j) aqueue)) (seq: seq) (index: index) (expectedAckSeq: eASeq) (windowCount: wc) (list: list) (expectedFrameSeq: eFSeq)} using dup2 .
+red in SIM : r1(swp(fqueue, (ack(j) aqueue), seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) .
+search[1] in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r1(swp(fqueue, (ack(j) ack(j) aqueue), seq, index, eASeq, wc, list, eFSeq), abp(PQ, BQ, B1, index, B2, L)) .
+--- composition
+red in SIM : r1(swp(fqueue, (ack(j) aqueue), seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r1(swp(fqueue, (ack(j) ack(j) aqueue), seq, index, eASeq, wc, list, eFSeq), abp(pqueue, bqueue, bool, index, bool, list)) and r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+-------------------------------------------------------------------------------------------
+--- Verification that the SCP simulates the ABP and satisfies the invariant of the ABP　---
+-------------------------------------------------------------------------------------------
+
+--- SCP-inv
+search[1] in SCP : init =>* {(bit1: B1) (bit2: B2) (index: I) (list: L) OCs} such that not SCP-inv(scp(B1, I, B2, L)) .
+
+--- r2 → (SCP-inv → ABP-inv)
+--- r2 = ture, SCP-inv = true
+--- getBit1(ABP) = getBit2(ABP) 
+fmod SIM_ABP2SCP_01 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (bool3 = bool4) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq list1 = mk(index1) .
+  eq list2 = mk(index2) .
+  eq (mk(index1) = mk(index2)) = true .
+endfm
+red in SIM_ABP2SCP_01 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, 0, bool2, nil), scp(pcell, bcell, bool1, 0, bool2, nil)) .
+red in SIM_ABP2SCP_01 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, s(index1), bool2, list1), scp(pcell, bcell, bool3, s(index2), bool4, list2)) .
+
+--- getBit1(ABP) != getBit2(ABP) 
+fmod SIM_ABP2SCP_02 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (bool3 = bool4) = false .
+  eq (index1 =Nat+ index2) = true .
+  eq list1 = mk(index1) .
+  eq list2 = mk(index2) .
+  eq (mk(index1) = mk(index2)) = true .
+endfm
+red in SIM_ABP2SCP_02 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
+
+--- r2 = true, SCP-inv = false
+fmod SIM_ABP2SCP_03 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (bool3 = bool4) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+  eq (mk(index2) = index2 list2) = false .
+endfm
+red in SIM_ABP2SCP_03 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
+
+fmod SIM_ABP2SCP_04 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (bool3 = bool4) = false .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+  eq (list2 = mk(index2)) = false .
+endfm
+red in SIM_ABP2SCP_04 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
+
+--- r2 = false
+fmod SIM_ABP2SCP_05 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = false .
+endfm
+red in SIM_ABP2SCP_05 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
+
+fmod SIM_ABP2SCP_06 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (index1 =Nat+ index2) = false .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_ABP2SCP_06 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
+
+fmod SIM_ABP2SCP_07 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = false .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_ABP2SCP_07 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
+
+fmod SIM_ABP2SCP_08 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool3) = false .
+  eq (bool2 = bool4) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_ABP2SCP_08 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, list1), scp(pcell, bcell, bool3, index2, bool4, list2)) .
+
+--- r2
+--- Condition(i)
+red in SIM : r2(abp(nil, nil, false, 0, false, nil), scp(empty, empty, false, 0, false, nil)) .
+red in SIM : r2(abp(nil, nil, false, 0, false, nil), scp(empty, empty, false, 0, false, nil)) and r4(scp(empty, empty, false, 0, false, nil), bcp2(false, 0, false, nil)) and r5(bcp2(false, 0, false, nil), bcp(0, nil)) .
+
+--- Condition(ii)
+--- send1 
+srew in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} using send1 .
+red in SIM : r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) .
+search[1] in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp((pqueue pcell(bool, index)), bqueue, bool, index, bool, list), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp((pqueue pcell(bool, index)), bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- rec1
+--- bit(BC) = bit1
+srew in ABP : {(queue1: pqueue) (queue2: (bcell(bool) bqueue)) (bit1: bool) (index: index) (bit2: bool) (list: list)} using rec1 .
+red in SIM : r2(abp(pqueue, (bcell(bool) bqueue), bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) .
+search[1] in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, bool, list), scp(PC, BC, B1, index, B2, L)) .
+--- composition
+red in SIM : r2(abp(pqueue, (bcell(bool) bqueue), bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- bit(BC) != bit1
+srew in ABP : {(queue1: pqueue) (queue2: (bcell(bool) bqueue)) (bit1: (not bool)) (index: index) (bit2: bool) (list: list)} using rec1 .
+red in SIM : r2(abp(pqueue, (bcell(bool) bqueue), (not bool), index, bool, list), scp(pcell, bcell, (not bool), index, bool, list)) .
+search[1] in SCP : {(cell1: pcell) (cell2: bcell) (bit1: (not bool)) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, s(index), bool, list), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp(pqueue, (bcell(bool) bqueue), (not bool), index, bool, list), scp(pcell, bcell, (not bool), index, bool, list)) and r4(scp(pcell, bcell, (not bool), index, bool, list), bcp2((not bool), index, bool, list)) and r5(bcp2((not bool), index, bool, list), bcp(s(index), list)) .
+search[1] in BCP : {(index: s(index)) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that  r2(abp(pqueue, bqueue, bool, s(index), bool, list), scp(pcell, bcell, bool, s(index), bool, list)) and r4(scp(pcell, bcell, bool, s(index), bool, list), bcp2(bool, s(index), bool, list)) and r5(bcp2(bool, s(index), bool, list), bcp(I, L)) .
+
+--- send2
+srew in ABP : {(queue1: pqueue) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} using send2 .
+red in SIM : r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) .
+search[1] in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp(pqueue, (bqueue bcell(bool)), bool, index, bool, list), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp(pqueue, (bqueue bcell(bool)), bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- rec2
+--- bit(PC) = bit2
+srew in ABP : {(queue1: (pcell(bool, index) pqueue)) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} using rec2 .
+red in SIM : r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell(bool, index), bcell, bool, index, bool, list)) .
+search[1] in SCP : {(cell1: pcell(bool, index)) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, (not bool), (index list)), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell(bool, index), bcell, bool, index, bool, list)) and r4(scp(pcell(bool, index), bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, (not bool), (index list)), scp(pcell(bool, index), bcell, bool, index, (not bool), (index list))) and r4(scp(pcell(bool, index), bcell, bool, index, (not bool), (index list)), bcp2(bool, index, (not bool), (index list))) and r5(bcp2(bool, index, (not bool), (index list)), bcp(I, L)) .
+
+--- bit(PC) != bit2
+srew in ABP : {(queue1: (pcell(bool, index) pqueue)) (queue2: bqueue) (bit1: bool) (index: index) (bit2: (not bool)) (list: list)} using rec2 .
+red in SIM : r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, (not bool), list), scp(pcell(bool, index), bcell, bool, index, (not bool), list)) .
+search[1] in SCP : {(cell1: pcell(bool, index)) (cell2: bcell) (bit1: bool) (index: index) (bit2: (not bool)) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, (not bool), list), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, (not bool), list), scp(pcell, bcell, bool, index, (not bool), list)) and r4(scp(pcell, bcell, bool, index, (not bool), list), bcp2(bool, index, (not bool), list)) and r5(bcp2(bool, index, (not bool), list), bcp(s(index), list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- drop1
+srew in ABP : {(queue1: (pcell(bool, index) pqueue)) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} using drop1 .
+red in SIM : r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) .
+search[1] in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, bool, list), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- dup1
+srew in ABP : {(queue1: (pcell(bool, index) pqueue)) (queue2: bqueue) (bit1: bool) (index: index) (bit2: bool) (list: list)} using dup1 .
+red in SIM : r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) .
+search[1] in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp((pcell(bool, index) pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp((pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp((pcell(bool, index) pcell(bool, index) pqueue), bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- drop2
+srew in ABP : {(queue1: pqueue) (queue2: (bcell(bool) bqueue)) (bit1: bool) (index: index) (bit2: bool) (list: list)} using drop2 .
+red in SIM : r2(abp(pqueue, (bcell(bool) bqueue), bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) .
+search[1] in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, bool, list), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp(pqueue, (bcell(bool) bqueue), bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp(pqueue, bqueue, bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- dup2
+srew in ABP : {(queue1: pqueue) (queue2: (bcell(bool) bqueue)) (bit1: bool) (index: index) (bit2: bool) (list: list)} using dup2 .
+red in SIM : r2(abp(pqueue, (bcell(bool) bqueue), bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) .
+search[1] in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r2(abp(pqueue, (bcell(bool) bcell(bool) bqueue), bool, index, bool, list), scp(PC, BC, B1, I, B2, L)) .
+--- composition
+red in SIM : r2(abp(pqueue, (bcell(bool) bqueue), bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r2(abp(pqueue, (bcell(bool) bcell(bool) bqueue), bool, index, bool, list), scp(pcell, bcell, bool, index, bool, list)) and r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+----------------------------------------------------------------------------------------
+--- Verification that BCP2 simulates the SCP and satisfies the invariant of the SCP　---
+----------------------------------------------------------------------------------------
+
+--- BCP2-inv
+search[1] in BCP2 : init =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that not BCP2-inv(bcp2(B1, I, B2, L)) .
+
+--- r4 → (BCP2-inv → SCP-inv)
+--- r4 = true, BCP2-inv = true
+--- getBit1(SCP) = getBit2(SCP) 
+fmod SIM_SCP2BCP2_01 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (bool3 = bool4) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq list1 = mk(index1) .
+  eq list2 = mk(index2) .
+  eq (mk(index1) = mk(index2)) = true .
+endfm
+red in SIM_SCP2BCP2_01 : SCP2BCP2-sim(scp(bool1, 0, bool2, nil), bcp2(bool3, 0, bool4, nil)) .
+red in SIM_SCP2BCP2_01 : SCP2BCP2-sim(scp(bool1, s(index1), bool2, list1), bcp2(bool1, s(index2), bool2, list2)) .
+
+--- getBit1(SCP) != getBit2(SCP) 
+fmod SIM_SCP2BCP2_02 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (bool3 = bool4) = false .
+  eq (index1 =Nat+ index2) = true .
+  eq list1 = mk(index1) .
+  eq list2 = mk(index2) .
+  eq (mk(index1) = mk(index2)) = true .
+endfm
+red in SIM_SCP2BCP2_02 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
+
+--- r4 = true, BCP2-inv = false
+fmod SIM_SCP2BCP2_03 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (bool3 = bool4) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+  eq (mk(index2) = index2 list2) = false .
+endfm
+red in SIM_SCP2BCP2_03 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
+
+fmod SIM_SCP2BCP2_04 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (bool3 = bool4) = false .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+  eq (list2 = mk(index2)) = false .
+endfm
+red in SIM_SCP2BCP2_04 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
+
+--- r4 = false
+fmod SIM_SCP2BCP2_05 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = false .
+endfm
+red in SIM_SCP2BCP2_05 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
+
+fmod SIM_SCP2BCP2_06 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = true .
+  eq (index1 =Nat+ index2) = false .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_SCP2BCP2_06 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
+
+fmod SIM_SCP2BCP2_07 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool3) = true .
+  eq (bool2 = bool4) = false .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_SCP2BCP2_07 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
+
+fmod SIM_SCP2BCP2_08 is
+  pr SIM .
+
+  ops bool1 bool2 bool3 bool4 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool3) = false .
+  eq (bool2 = bool4) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_SCP2BCP2_08 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(bool3, index2, bool4, list2)) .
+
+--- r4
+--- Condition(i)
+red in SIM : r4(scp(empty, empty, false, 0, false, nil), bcp2(false, 0, false, nil)) .
+red in SIM : r4(scp(empty, empty, false, 0, false, nil), bcp2(false, 0, false, nil)) and r5(bcp2(false, 0, false, nil), bcp(0, nil)) .
+
+--- Condition(ii)
+--- send1
+srew in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} using send1 .
+red in SIM : r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) .
+search[1] in BCP2 : {(bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r4(scp(pcell(bool, index), bcell, bool, index, bool, list), bcp2(B1, I, B2, L)) .
+--- composition
+red in SIM : r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r4(scp(pcell(bool, index), bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- rec1
+--- bit(BC) = bit1
+srew in SCP : {(cell1: pcell) (cell2: bcell(bool)) (bit1: bool) (index: index) (bit2: bool) (list: list)} using rec1 .
+red in SIM : r4(scp(pcell,  bcell(bool), bool, index, bool, list), bcp2(bool, index, bool, list)) .
+search[1] in BCP2 : {(bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r4(scp(pcell, empty, bool, index, bool, list), bcp2(B1, I, B2, L)) .
+--- composition
+red in SIM : r4(scp(pcell, bcell(bool), bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r4(scp(pcell, empty, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- bit(BC) != bit1
+srew in SCP : {(cell1: pcell) (cell2: bcell(bool)) (bit1: (not bool)) (index: index) (bit2: bool) (list: list)} using rec1 .
+red in SIM : r4(scp(pcell, bcell(bool), (not bool), index, bool, list), bcp2((not bool), index, bool, list)) .
+search[1] in BCP2 : {(bit1: (not bool)) (index: index) (bit2: bool) (list: list)} =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r4(scp(pcell, empty, bool, s(index), bool, list), bcp2(B1, I, B2, L)) .
+--- composition
+red in SIM : r4(scp(pcell, bcell(bool), (not bool), index, bool, list), bcp2((not bool), index, bool, list)) and r5(bcp2((not bool), index, bool, list), bcp(s(index), list)) .
+search[1] in BCP : {(index: s(index)) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r4(scp(pcell, empty, bool, s(index), bool, list), bcp2(bool, s(index), bool, list)) and r5(bcp2(bool, s(index), bool, list), bcp(I, L)) .
+
+--- send2
+srew in SCP : {(cell1: pcell) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} using send2 .
+red in SIM : r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) .
+search[1] in BCP2 : {(bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r4(scp(pcell, bcell(bool), bool, index, bool, list), bcp2(B1, I, B2, L)) .
+--- composition
+red in SIM : r4(scp(pcell, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r4(scp(pcell, bcell(bool), bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- rec2
+--- bit(PC) = bit2
+srew in SCP : {(cell1: pcell(bool, index)) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} using rec2 .
+red in SIM : r4(scp(pcell(bool, index), bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) .
+search[1] in BCP2 : {(bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r4(scp(empty, bcell, bool, index, (not bool), (index list)), bcp2(B1, I, B2, L)) .
+--- composition
+red in SIM : r4(scp(pcell(bool, index), bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r4(scp(empty, bcell, bool, index, (not bool), (index list)), bcp2(bool, index, (not bool), (index list))) and r5(bcp2(bool, index, (not bool), (index list)), bcp(I, L)) .
+
+--- bit(PC) != bit2
+srew in SCP : {(cell1: pcell(bool, index)) (cell2: bcell) (bit1: bool) (index: index) (bit2: (not bool)) (list: list)} using rec2 .
+red in SIM : r4(scp(pcell(bool, index), bcell, bool, index, (not bool), list), bcp2(bool, index, (not bool), list)) .
+search[1] in BCP2 : {(bit1: bool) (index: index) (bit2: (not bool)) (list: list)} =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r4(scp(empty, bcell, bool, index, (not bool), list), bcp2(B1, I, B2, L)) .
+--- composition
+red in SIM : r4(scp(pcell(bool, index), bcell, bool, index, (not bool), list), bcp2(bool, index, (not bool), list)) and r5(bcp2(bool, index, (not bool), list), bcp(s(index), list)) .
+search[1] in BCP : {(index: s(index)) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r4(scp(empty, bcell, bool, index, (not bool), list), bcp2(bool, index, (not bool), list)) and r5(bcp2(bool, index, (not bool), list), bcp(I, L)) .
+
+--- drop1 
+srew in SCP : {(cell1: pcell(bool, index)) (cell2: bcell) (bit1: bool) (index: index) (bit2: bool) (list: list)} using drop1 .
+red in SIM : r4(scp(pcell(bool, index), bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) .
+search[1] in BCP2 : {(bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r4(scp(empty, bcell, bool, index, bool, list), bcp2(B1, I, B2, L)) .
+--- composition
+red in SIM : r4(scp(pcell(bool, index), bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP :  {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r4(scp(empty, bcell, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+--- drop2
+srew in SCP : {(cell1: pcell) (cell2: bcell(bool)) (bit1: bool) (index: index) (bit2: bool) (list: list)} using drop2 .
+red in SIM : r4(scp(pcell, bcell(bool), bool, index, bool, list), bcp2(bool, index, bool, list)) .
+search[1] in BCP2 : {(bit1: bool) (index: index) (bit2: bool) (list: list)} =>* {(bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that r4(scp(pcell, empty, bool, index, bool, list), bcp2(B1, I, B2, L)) .
+--- composition
+red in SIM : r4(scp(pcell, bcell(bool), bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP :  {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r4(scp(pcell, empty, bool, index, bool, list), bcp2(bool, index, bool, list)) and r5(bcp2(bool, index, bool, list), bcp(I, L)) .
+
+---------------------------------------------------------------------------------
+--- Verification that BCP simulates BCP2 and satisfies the invariant of BCP2　---
+---------------------------------------------------------------------------------
+
+--- BCP-inv
+search[1] in BCP : init =>* {(index: I) (list: L) OCs} such that not BCP-inv(bcp(I, L)) .
+
+--- r5 → (BCP-inv → BCP2-inv)
+--- r5 = true, BCP-inv = true
+--- getBit1(BCP2) = getBit2(BCP2) 
+fmod SIM_BCP22BCP_01 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq list1 = mk(index1) .
+  eq list2 = mk(index2) .
+  eq (mk(index1) = mk(index2)) = true .
+endfm
+red in SIM_BCP22BCP_01 : BCP22BCP-sim(bcp2(bool1, 0, bool2, nil), bcp(0, nil)) .
+red in SIM_BCP22BCP_01 : BCP22BCP-sim(bcp2(bool1, s(index1), bool2, list1), bcp(s(index2), list2)) .
+
+--- getBit1(BCP2) != getBit2(BCP2) 
+fmod SIM_BCP22BCP_02 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (s(index1) =Nat+ s(index2)) = true .
+  eq list1 = mk(index1) .
+  eq list2 = mk(index2) .
+  eq (mk(index1) = mk(index2)) = true .
+endfm
+red in SIM_BCP22BCP_02 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(s(index2), list2)) .
+
+--- r5 = true, BCP-inv = false
+--- getBit1(BCP2) = getBit2(BCP2) 
+fmod SIM_BCP22BCP_03 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+  eq (mk(index2) = index2 list2) = false .
+endfm
+red in SIM_BCP22BCP_03 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
+
+--- getBit1(BCP2) != getBit2(BCP2) 
+fmod SIM_BCP22BCP_04 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (s(index1) =Nat+ index2) = true .
+  eq (list1 = list2) = true .
+  eq (mk(index2) = index2 list2) = false .
+endfm
+red in SIM_BCP22BCP_04 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
+
+--- r5 = false
+fmod SIM_BCP22BCP_05 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = false .
+endfm
+red in SIM_BCP22BCP_05 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
+
+fmod SIM_BCP22BCP_06 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = true .
+  eq (index1 =Nat+ index2) = false .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_BCP22BCP_06 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
+
+fmod SIM_BCP22BCP_07 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (index1 =Nat+ index2) = true .
+  eq (list1 = list2) = false .
+endfm
+red in SIM_BCP22BCP_07 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
+
+fmod SIM_BCP22BCP_08 is
+  pr SIM .
+
+  ops bool1 bool2 : -> Bool+ .
+  ops index1 index2 : -> Nat+ .
+  ops list1 list2 : -> List{Nat+} .
+
+  eq (bool1 = bool2) = false .
+  eq (s(index1) =Nat+ index2) = false .
+  eq (list1 = list2) = true .
+endfm
+red in SIM_BCP22BCP_08 : BCP22BCP-sim(bcp2(bool1, index1, bool2, list1), bcp(index2, list2)) .
+
+--- r5
+--- Condition(i)
+red in SIM : r5(bcp2(false, 0, false, nil), bcp(0, nil)) .
+
+--- Condition(ii)
+--- send1 
+--- bit1 != bit2
+srew in BCP2 : {(bit1: bool) (index: index) (bit2: (not bool)) (list: list)} using send1 .
+red in SIM : r5(bcp2(bool, index, (not bool), list), bcp(s(index), list)) .
+search[1] in BCP : {(index: s(index)) (list: list)} =>* {(index: I) (list: L) OCs} such that r5(bcp2((not bool), s(index), (not bool), list), bcp(I, L)) .
+
+--- send2
+--- bit1 = bit2
+srew in BCP2 : {(bit1: bool) (index: index) (bit2: bool) (list: list)} using send2 .
+red in SIM : r5(bcp2(bool, index, bool, list), bcp(index, list)) .
+search[1] in BCP : {(index: index) (list: list)} =>* {(index: I) (list: L) OCs} such that r5(bcp2( bool, index, (not bool), (index list)), bcp(I, L)) .
