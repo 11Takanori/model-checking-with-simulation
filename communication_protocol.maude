@@ -522,14 +522,20 @@ endv
 
 fmod BCP-CONFIG is
   pr SOUP{BCPOCom} .
+  pr BCP-STATE .
   pr CONSTANT .
 
-  sort Config .
+  sort BCPConfig .
 
-  op {_} : Soup{BCPOCom} -> Config [ctor] .
-  op init : -> Config .
+  op {_} : Soup{BCPOCom} -> BCPConfig [ctor] .
+  op init : -> BCPConfig .
+  op state : BCPConfig -> BCPState .
+
+  var I : Nat+ .
+  var L : List{Nat+} .
 
   eq init = {(index: 0) (list: nil)} .
+  eq state({(index: I) (list: L)}) = bcp(I, L) .
 endfm
 
 --- Bare communication protocol
@@ -570,14 +576,23 @@ endv
 
 fmod SCP-CONFIG is
   pr SOUP{SCPOCom} .
+  pr SCP-STATE .
   pr CONSTANT .
 
-  sort Config .
+  sort SCPConfig .
 
-  op {_} : Soup{SCPOCom} -> Config [ctor] .
-  op init : -> Config .
+  op {_} : Soup{SCPOCom} -> SCPConfig [ctor] .
+  op init : -> SCPConfig .
+  op state : SCPConfig -> SCPState .
+
+  var I : Nat+ .
+  var L : List{Nat+} .
+  vars B1 B2 : Bool+ .
+  var PC : PCell .
+  var BC : BCell .
 
   eq init = {(cell1: empty) (cell2: empty) (bit1: false) (index: 0) (bit2: false) (list: nil)} .
+  eq state({(cell1: PC) (cell2: BC) (bit1: B1) (index: I) (bit2: B2) (list: L)}) = scp(PC, BC, B1, I, B2, L).
 endfm
 
 --- Simple communication protocol
@@ -638,12 +653,22 @@ fmod ABP-CONFIG is
   pr SOUP{ABPOCom} .
   pr CONSTANT .
 
-  sort Config .
+  sort ABPConfig .
 
-  op {_} : Soup{ABPOCom} -> Config [ctor] .
-  op init : -> Config .
+  op {_} : Soup{ABPOCom} -> ABPConfig [ctor] .
+  op init : -> ABPConfig .
+  op state : ABPConfig -> ABPState .
+
+  var I : Nat+ .
+  var L : List{Nat+} .
+  vars B1 B2 : Bool+ .
+  var PC : PCell .
+  var BC : BCell .
+  var PQ : Queue{PCell} .
+  var BQ : Queue{BCell} .
 
   eq init = {(queue1: nil) (queue2: nil) (bit1: false) (index: 0) (bit2: false) (list: nil)} .
+  eq state({(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L)}) = abp(PQ, BQ, B1, I, B2, L).
 endfm
 
 --- Alternating bit protocol
@@ -705,14 +730,21 @@ endv
 
 fmod BCP2-CONFIG is
   pr SOUP{BCP2OCom} .
+  pr BCP2-STATE .
   pr CONSTANT .
 
-  sort Config .
+  sort BCP2Config .
 
-  op {_} : Soup{BCP2OCom} -> Config [ctor] .
-  op init : -> Config .
+  op {_} : Soup{BCP2OCom} -> BCP2Config [ctor] .
+  op init : -> BCP2Config .
+  op state : BCP2Config -> BCP2State .
+
+  var I : Nat+ .
+  var L : List{Nat+} .
+  vars B1 B2 : Bool+ .
 
   eq init = {(bit1: false) (index: 0) (bit2: false) (list: nil)} .
+  eq state({(bit1: B1) (index: I) (bit2: B2) (list: L)}) = bcp2(B1, I, B2, L) .
 endfm
 
 mod BCP2 is
@@ -759,12 +791,19 @@ fmod SWP-CONFIG is
   pr SOUP{SWPOCom} .
   pr CONSTANT .
 
-  sort Config .
+  sort SWPConfig .
 
-  op {_} : Soup{SWPOCom} -> Config [ctor] .
-  op init : -> Config .
+  op {_} : Soup{SWPOCom} -> SWPConfig [ctor] .
+  op init : -> SWPConfig .
+  op state : SWPConfig -> SWPState .
+
+  vars S I AS C FS : Nat+ .
+  var FQ : Queue{Frame} .
+  var AQ : Queue{Ack} .
+  var L : List{Nat+} .
 
   eq init = {(queue1: nil) (queue2: nil) (seq: 0) (index: 0) (expectedAckSeq: 0) (windowCount: 0) (list: nil) (expectedFrameSeq: 0)} .
+  eq state({(queue1: FQ) (queue2: AQ) (seq: S) (index: I) (expectedAckSeq: AS) (windowCount: C) (list: L) (expectedFrameSeq: FS)}) = swp(FQ, AQ, S, I, AS, C, L, FS).
 endfm
 
 mod SWP is
