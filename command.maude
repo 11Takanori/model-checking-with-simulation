@@ -795,10 +795,10 @@ red in SIM : r5(bcp2(false, 0, false, nil), bcp(0, nil)) .
 --- bit1 != bit2
 srew in BCP2 : {(bit1: bool) (index: index) (bit2: (not bool)) (list: list)} using send1 .
 red in SIM : r5(bcp2(bool, index, (not bool), list), bcp(s(index), list)) .
-search[1] in BCP : {(index: s(index)) (list: list)} =>* {(index: I) (list: L) OCs} such that r5(bcp2((not bool), s(index), (not bool), list), bcp(I, L)) .
+search[1] in BCP : {(index: s(index)) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r5(bcp2((not bool), s(index), (not bool), list), bcp(I, L)) .
 
 --- send2
 --- bit1 = bit2
 srew in BCP2 : {(bit1: bool) (index: index) (bit2: bool) (list: list)} using send2 .
 red in SIM : r5(bcp2(bool, index, bool, list), bcp(index, list)) .
-search[1] in BCP : {(index: index) (list: list)} =>* {(index: I) (list: L) OCs} such that r5(bcp2( bool, index, (not bool), (index list)), bcp(I, L)) .
+search[1] in BCP : {(index: index) (list: list) OCs} =>* {(index: I) (list: L) OCs} such that r5(bcp2( bool, index, (not bool), (index list)), bcp(I, L)) .
