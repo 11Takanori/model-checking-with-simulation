@@ -73,7 +73,6 @@ red in SIM_SWP2ABP_04 : SWP2ABP-sim(swp(fqueue, aqueue, seq, index1, eASeq, wc, 
 --- r1
 --- Condition(i)
 red in SIM : r1(swp(empty, empty, 0, 0, 0, 0, nil, 0), abp(empty, empty, false, 0, false, nil)) .
-red in SIM : r1(swp(empty, empty, 0, 0, 0, 0, nil, 0), abp(empty, empty, false, 0, false, nil)) and r2(abp(nil, nil, false, 0, false, nil), scp(empty, empty, false, 0, false, nil)) and r4(scp(empty, empty, false, 0, false, nil), bcp2(false, 0, false, nil)) and r5(bcp2(false, 0, false, nil), bcp(0, nil)) .
 
 --- Condition(ii)
 --- send1 
@@ -312,7 +311,6 @@ red in SIM_ABP2SCP_08 : ABP2SCP-sim(abp(pqueue, bqueue, bool1, index1, bool2, li
 --- r2
 --- Condition(i)
 red in SIM : r2(abp(nil, nil, false, 0, false, nil), scp(empty, empty, false, 0, false, nil)) .
-red in SIM : r2(abp(nil, nil, false, 0, false, nil), scp(empty, empty, false, 0, false, nil)) and r4(scp(empty, empty, false, 0, false, nil), bcp2(false, 0, false, nil)) and r5(bcp2(false, 0, false, nil), bcp(0, nil)) .
 
 --- Condition(ii)
 --- send1 
@@ -510,7 +508,6 @@ red in SIM_SCP2BCP2_08 : SCP2BCP2-sim(scp(bool1, index1, bool2, list1), bcp2(boo
 --- r4
 --- Condition(i)
 red in SIM : r4(scp(empty, empty, false, 0, false, nil), bcp2(false, 0, false, nil)) .
-red in SIM : r4(scp(empty, empty, false, 0, false, nil), bcp2(false, 0, false, nil)) and r5(bcp2(false, 0, false, nil), bcp(0, nil)) .
 
 --- Condition(ii)
 --- send1
