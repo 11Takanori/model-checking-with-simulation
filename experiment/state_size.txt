@@ -1,0 +1,78 @@
+maxIndex: 8
+maxQueueLength: 4
+windowSize: 2
+
+\||||||||||||||||||/
+--- Welcome to Maude ---
+  /||||||||||||||||||\
+Maude 3.3.1 built: Apr 13 2023 16:10:31
+Copyright 1997-2023 SRI International
+Sat Mar 29 13:24:08 2025
+==========================================
+search [1] in SWP : init =>* {OCs queue1: FQ queue2: AQ seq: S index: I expectedAckSeq: A windowCount: C list: L
+expectedFrameSeq: F} such that not SWP-inv(swp(FQ, AQ, S, I, A, C, L, F)) = true .
+
+No solution.
+states: 8812  rewrites: 1292644 in 420ms cpu (419ms real) (3077723 rewrites/second)
+==========================================
+search [1] in ABP : init =>* {OCs queue1: PQ queue2: BQ bit1: B1 index: I bit2: B2 list: L} such that not ABP-inv(abp(
+PQ, BQ, B1, I, B2, L)) = true .
+
+No solution.
+states: 3311  rewrites: 357443 in 80ms cpu (82ms real) (4468037 rewrites/second)
+==========================================
+search [1] in SCP : init =>* {OCs bit1: B1 index: I bit2: B2 list: L} such that not SCP-inv(scp(B1, I, B2, L)) = true .
+
+No solution.
+states: 110  rewrites: 8841 in 10ms cpu (1ms real) (884100 rewrites/second)
+==========================================
+search [1] in BCP2 : init =>* {OCs index: I list: L bit1: B1 bit2: B2} such that not BCP2-inv(bcp2(B1, I, B2, L)) =
+true .
+
+No solution.
+states: 20  rewrites: 1268 in 0ms cpu (0ms real) (~ rewrites/second)
+==========================================
+search [1] in BCP : init =>* {OCs index: I list: L} such that not BCP-inv(bcp(I, L)) = true .
+
+No solution.
+states: 10  rewrites: 310 in 0ms cpu (0ms real) (~ rewrites/second)
+
+
+maxIndex: 16
+maxQueueLength: 8
+windowSize: 4
+
+  \||||||||||||||||||/
+  --- Welcome to Maude ---
+    /||||||||||||||||||\
+Maude 3.3.1 built: Apr 13 2023 16:10:31
+Copyright 1997-2023 SRI International
+  Sat Mar 29 13:30:34 2025
+==========================================
+search [1] in SWP : init =>* {OCs queue1: FQ queue2: AQ seq: S index: I expectedAckSeq: A windowCount: C list: L
+expectedFrameSeq: F} such that not SWP-inv(swp(FQ, AQ, S, I, A, C, L, F)) = true .
+
+No solution.
+states: 1121593  rewrites: 217803563 in 272850ms cpu (272857ms real) (798253 rewrites/second)
+==========================================
+search [1] in ABP : init =>* {OCs queue1: PQ queue2: BQ bit1: B1 index: I bit2: B2 list: L} such that not ABP-inv(abp(
+PQ, BQ, B1, I, B2, L)) = true .
+
+No solution.
+states: 23837  rewrites: 3521607 in 3130ms cpu (3126ms real) (1125114 rewrites/second)
+==========================================
+search [1] in SCP : init =>* {OCs bit1: B1 index: I bit2: B2 list: L} such that not SCP-inv(scp(B1, I, B2, L)) = true .
+
+No solution.
+states: 206  rewrites: 20697 in 10ms cpu (14ms real) (2069700 rewrites/second)
+==========================================
+search [1] in BCP2 : init =>* {OCs index: I list: L bit1: B1 bit2: B2} such that not BCP2-inv(bcp2(B1, I, B2, L)) =
+true .
+
+No solution.
+states: 36  rewrites: 3012 in 0ms cpu (1ms real) (~ rewrites/second)
+==========================================
+search [1] in BCP : init =>* {OCs index: I list: L} such that not BCP-inv(bcp(I, L)) = true .
+
+No solution.
+states: 18  rewrites: 846 in 0ms cpu (0ms real) (~ rewrites/second)
