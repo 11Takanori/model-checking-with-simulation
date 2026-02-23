@@ -422,19 +422,19 @@ fmod CONSTANT is
   op _<_ : Nat+ Nat+ -> Bool [ditto] .
   op _<=_ : Nat+ Nat+ -> Bool [ditto] .
 
-  eq maxIndex = 9 .
-  eq index <= 9 = true .
-  eq windowSize = 3 .
-  eq smallerWindowSize < 3 = true .
-  eq maxQueueLength = 5 .
-  eq $length(pqueue, 0) <= 5 = true .
-  eq $length(pqueue, 1) <= 5 = true .
-  eq $length(bqueue, 0) <= 5 = true .
-  eq $length(bqueue, 1) <= 5 = true .
-  eq $length(fqueue, 0) <= 5 = true .
-  eq $length(fqueue, 1) <= 5 = true .
-  eq $length(aqueue, 0) <= 5 = true .
-  eq $length(aqueue, 1) <= 5 = true .
+  eq maxIndex = 64 .
+  eq index <= 64 = true .
+  eq windowSize = 16 .
+  eq smallerWindowSize < 16 = true .
+  eq maxQueueLength = 32 .
+  eq $length(pqueue, 0) <= 32 = true .
+  eq $length(pqueue, 1) <= 32 = true .
+  eq $length(bqueue, 0) <= 32 = true .
+  eq $length(bqueue, 1) <= 32 = true .
+  eq $length(fqueue, 0) <= 32 = true .
+  eq $length(fqueue, 1) <= 32 = true .
+  eq $length(aqueue, 0) <= 32 = true .
+  eq $length(aqueue, 1) <= 32 = true .
   eq $length(list, 0) > 0 = true .
 endfm
 

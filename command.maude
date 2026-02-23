@@ -5,7 +5,7 @@ load ./communication_protocol.maude
 -------------------------------------------------------------------------------------------
 
 --- ABP-inv
-search[1] in ABP : init =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that not ABP-inv(abp(PQ, BQ, B1, I, B2, L)) .
+--- search[1] in ABP : init =>* {(queue1: PQ) (queue2: BQ) (bit1: B1) (index: I) (bit2: B2) (list: L) OCs} such that not ABP-inv(abp(PQ, BQ, B1, I, B2, L)) .
 
 --- r1 → (ABP-inv → SWP-inv)
 --- getIndex(SWP) >= getIndex(ABP) and getList(SWP) = getList(ABP)
